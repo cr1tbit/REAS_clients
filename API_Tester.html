@@ -162,6 +162,10 @@ Nothing (yet!)
         saveSettingsOnLocalStorage()
     }
 
+
+
+
+
     /** Local Storage functionality **/
 
     function enableLocalStorage(){
@@ -192,10 +196,7 @@ Nothing (yet!)
         console.log("Json config loaded:\n" + JSON.stringify(jsonConfig,null,2));
     }
     
-    function setIP(){
-        jsonConfig.deviceIP = document.getElementById("ipAddr").value;
-    }
-
+    
     function saveSettingsOnLocalStorage(){
         if(jsonConfig.localStorageEnabled == true){
             localStorage.setItem('jsonConfigText',JSON.stringify(jsonConfig,null,2))
@@ -226,7 +227,11 @@ Nothing (yet!)
         return defaultJsonConfig;
     }
 
-    /** local Json Config operations **/
+        /** local Json Config operations **/
+
+    function setIP(){
+        jsonConfig.deviceIP = document.getElementById("ipAddr").value;
+    }
 
     function setAntName(antNo){
         if (jsonConfig.antenna[antNo] != null){
@@ -263,10 +268,11 @@ Nothing (yet!)
         drawAntennaList();
     }
 
-    /** Local area network and REAS API functionality **/
-
-    function getRemoteAntennaStatus(){
-        
+    function setAntennaCount(){
+        var antNo = document.getElementById("antSetupCount").value
+        if (antNo>0||antNo<maxAntCount){
+            jsonConfig.antennaCount=antNo;
+        }
     }
 
     function getApiRequestFromJsonConfig(){
@@ -284,6 +290,12 @@ Nothing (yet!)
         return request
     }
 
+    /** Local area network and REAS API functionality **/
+
+    function getRemoteAntennaStatus(){
+        
+    }
+
     function reqStrUpdate() {
         req = "http://" +
                    document.getElementById('ipAddr').value +
@@ -293,12 +305,7 @@ Nothing (yet!)
         console.log("query: " + req);
     }
     
-    function setAntennaCount(){
-        var antNo = document.getElementById("antSetupCount").value
-        if (antNo>0||antNo<maxAntCount){
-            jsonConfig.antennaCount=antNo;
-        }
-    }
+    
     
     function httpGetFromReq(){
         reqStrUpdate();
