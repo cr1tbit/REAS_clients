@@ -143,136 +143,80 @@ Nothing (yet!)
 </div>
 
 
+
+<script src="js/jsonConfigController.js">
+</script>
 <script>
     /** global variables **/
     var req = "";
     var setupMode = false;
-    var jsonConfig = {};
-    var maxAntCount = 8;
+    var jsonConfigController;
+   
 
     /** webapp start and finish **/
 
     function appStart(){
-        loadSettingsFromLocalStorage();
+        jsonConfigController = new JsonConfigController;
         drawAntennaList();
-        document.getElementById("ipAddr").value = jsonConfig.deviceIP;
+        document.getElementById("ipAddr").value = jsonConfigController.getIP();
     }
 
     function appClose(){
-        saveSettingsOnLocalStorage()
+        jsonConfigController.saveSettingsOnLocalStorage()
     }
-
-
-
-
 
     /** Local Storage functionality **/
 
     function enableLocalStorage(){
-        jsonConfig.localStorageEnabled = true;
+        jsonConfigController.enableLocalStorage();
         document.getElementById('localStorageConsentWindow').style.display = "none";
     }
 
     function disableLocalStorage(){
-        jsonConfig.localStorageEnabled = false; 
-        localStorage.clear();
+        jsonConfigController.disableLocalStorage();
         document.getElementById('localStorageConsentWindow').style.display = "none";
-    }
-
-    function loadSettingsFromLocalStorage(){
-        if (typeof(Storage) !== "undefined") {
-            console.log("Loading local storage...")
-            if (localStorage.getItem('jsonConfigText') == null ){
-                jsonConfig = getDefaultJsonConfig();
-                console.log("Default json generated.")
-            }
-            else{
-                jsonConfig = JSON.parse(localStorage.getItem('jsonConfigText'));
-                console.log("Json loade from local storage")
-            }
-        } else {
-            console.log("local storage not supported.")
-        }
-        console.log("Json config loaded:\n" + JSON.stringify(jsonConfig,null,2));
-    }
-    
-    
-    function saveSettingsOnLocalStorage(){
-        if(jsonConfig.localStorageEnabled == true){
-            localStorage.setItem('jsonConfigText',JSON.stringify(jsonConfig,null,2))
-            console.log('saving data on local storage...');
-        }
-        else{
-            console.log('local storage disabled.')
-        }
-    }
-
-    function getDefaultJsonConfig(){
-        var defaultJsonConfig = {
-            deviceIP : "192.168.2.100",
-            localStorageEnabled : false,
-            singleAntenna : true,
-            autoUpdate : false,
-            antennaCount : maxAntCount,
-            antenna : []
-        }
-        for(var i = 0;i<defaultJsonConfig["antennaCount"];i++){
-            defaultJsonConfig.antenna[i] = {
-                name : "Ant " + (i+1),
-                state : "off",
-                remoteState : "??"
-            }
-        }
-        //console.log(JSON.stringify(defaultJsonconfig,null,2));
-        return defaultJsonConfig;
-    }
-
-        /** local Json Config operations **/
+    } 
 
     function setIP(){
-        jsonConfig.deviceIP = document.getElementById("ipAddr").value;
+        jsonConfigController.setIP(document.getElementById("ipAddr").value);
     }
 
     function setAntName(antNo){
-        if (jsonConfig.antenna[antNo] != null){
-            jsonConfig.antenna[antNo].name = 
-                document.getElementById("antListName"+antNo).value; 
-        }
+        jsonConfigController.setAntName(antNo,
+                                        document.getElementById("antListName"+antNo).value);
     }
 
     function toggleAntenna(antNo){
-        if(jsonConfig.singleAntenna == true){
-            setAntennasOff()
-        }
-        if(antNo<0||antNo>jsonConfig.antennaCount){
-            setAntennasOff()
-        }
-        else if (jsonConfig.antenna[antNo].state == "off"){
-            jsonConfig.antenna[antNo].state = "on"
-        }
-        else if (jsonConfig.antenna[antNo].state == "on"){
-            jsonConfig.antenna[antNo].state = "off"
+        switch (jsonConfigController.getAntVal(antNo)){
+            case "off":
+                jsonConfigController.setAntVal(antNo,"on");
+                break;
+            case "on":
+                jsonConfigController.setAntVal(antNo,"off");
+                break;
+            default:
+                jsonConfigController.setAntennasOff();
+                break;
         }
         drawAntennaList();
-        httpGet(getApiRequestFromJsonConfig());
+        httpGet(getApiRequestFromJsonConfig(),handleServerResponse);
     }
 
     function setAntennasOff(){
-        for (i in jsonConfig.antenna){
-            jsonConfig.antenna[i].state = "off"
-        }
+        jsonConfigController.setAntennasOff();
     }
 
     function setSingleAntennaMode(){
-        jsonConfig.singleAntenna = document.getElementById("singleAntModeBox").checked;
+        jsonConfigController.setSingleAntennaMode(
+            document.getElementById("singleAntModeBox").checked
+        );
         drawAntennaList();
     }
 
     function setAntennaCount(){
-        var antNo = document.getElementById("antSetupCount").value
-        if (antNo>0||antNo<maxAntCount){
-            jsonConfig.antennaCount=antNo;
-        }
+        jsonConfigController.setAntennaCount(
+            document.getElementById("antSetupCount").value
+        );
     }
 
     function getApiRequestFromJsonConfig(){
@@ -296,6 +240,10 @@ Nothing (yet!)
         
     }
 
+    function getRequestFromInterface(){
+
+    }
+
     function reqStrUpdate() {
         req = "http://" +
                    document.getElementById('ipAddr').value +
@@ -305,52 +253,62 @@ Nothing (yet!)
         console.log("query: " + req);
     }
     
-    
-    
     function httpGetFromReq(){
         reqStrUpdate();
-        httpGet(req);
+        //document.getElementById("queryDisp").innerHTML = req;
+        updateQueryDisp(req);
+        updateRespDisp("Waiting for response...");
+        httpGet(req,handleServerResponse);
     }
 
-    function httpGet(param)
+
+    function handleServerResponse(responseStatus,responseText){
+        var textToDisplay;
+        
+        if(responseStatus == 200){
+            textToDisplay = "Valid request. Response:\n" + responseText;
+            drawDeviceStatus("Online");
+        }
+
+        /** request error **/
+        else if(responseStatus == -1){
+            textToDisplay = "http request error:\n" + responseText;
+            drawDeviceStatus("Error");
+        }
+        /** request timeout **/
+        else if(responseStatus == 0){
+            textToDisplay = "http request timeout:\n" + responseText;
+            drawDeviceStatus("Offline");
+        }
+        /** Error: not found **/
+        else if(responseStatus == 404){
+            textToDisplay = "Server responded but parameter not found:\n" + responseText;
+            drawDeviceStatus("Error");
+        }
+        /** Error: different error **/
+        else {
+            textToDisplay = "Server responded with undefined error no.:\n" + responseText;
+            drawDeviceStatus("Error");
+        }
+        updateRespDisp(textToDisplay);
+    }
+
+    function httpGet(param,onLoadFunctionHandle = null)
     {
-        updateRespDisp("Waiting for response...");
-        document.getElementById("queryDisp").innerHTML = param;
+        console.log("param: " + param);
         var xmlHttp = new XMLHttpRequest();
         xmlHttp.open( "GET", param, true );
         xmlHttp.onload = function (e) {
             if (xmlHttp.readyState === 4) {
-                if (xmlHttp.status === 200) {
-                    updateRespDisp("Response valid: \n" + xmlHttp.responseText);
-                    drawDeviceStatus("Online");
-                } 
-                else if (xmlHttp.status === 404) {
-                    updateRespDisp("Resource not found. Check if your query is valid: \n" +
-                                    param + 
-                                    "\n Response: \n" + 
-                                    xmlHttp.responseText);
-                    drawDeviceStatus("Online");
-                }
-                else {
-                    updateRespDisp("Response error: " +
-                                    xmlHttp.statusText +
-                                    "\n Response: \n" + 
-                                    xmlHttp.responseText);
-                    drawDeviceStatus("Error");
-                }
+                onLoadFunctionHandle(xmlHttp.status,xmlHttp.responseText)
             }
         };
         xmlHttp.timeout = 1000;
         xmlHttp.ontimeout = function (e) {
-            updateRespDisp("Timeout after 1000ms. Is the device turned on and connected to the network?");
-            drawDeviceStatus("Offline");
+            onLoadFunctionHandle(0,"timeout");
         };
         xmlHttp.onerror = function (e) {
-            updateRespDisp("Request Error: " + 
-                            xmlHttp.statusText +
-                            "\ncheck your internet status. This error may also be caused by some firewall" +
-                            " issues, please contact me at my github, as this client hasn't been tested eneough yet.");
-            drawDeviceStatus("Error");
+            onLoadFunctionHandle(-1,"Error");
         };
         console.log("Starting query...");
         xmlHttp.send( null );
@@ -358,7 +316,22 @@ Nothing (yet!)
 
 
     /** Rendering HTML section **/
-    
+    /*
+    class GuiController{
+
+
+
+        constructor(){
+            console.log("guiController constructor called...")
+            this.jsonGuiTree = getGuiTreeJson()
+        }
+
+        getGuiElementsJson(){
+
+        }
+    }
+*/
+
     function toggleSetupMode(){
         if (setupMode == true){
             setupMode = false;
@@ -402,6 +375,7 @@ Nothing (yet!)
     }
                     
     function drawAntennaList(){
+        jsonConfig = jsonConfigController.jsonConfig;
         var htmlText = "";
         if (setupMode) htmlText += "<h3>SETUP MODE</h3>";
         for(var i=0;i<jsonConfig.antennaCount;i++){
@@ -459,8 +433,8 @@ Nothing (yet!)
         if(setupMode){
             /** drawing antenna count input field **/
             htmlText += '<br><label class="siimple-label"> Antenna Count</label>' +
-            '<input id="antSetupCount" type="number" min=1 max='+ maxAntCount +' class="siimple-input"'+
-            'onchange="setAntennaCount()" placeholder="' + jsonConfig.antennaCount + '">'
+            '<input id="antSetupCount" type="number" min=1 max='+ jsonConfigController.maxAntCount +' class="siimple-input"'+
+            'onchange="setAntennaCount()" placeholder="' + jsonConfigController.jsonConfig.antennaCount + '">'
         }
         else{
             /** drawing turnAllOff button **/
