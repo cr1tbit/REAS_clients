@@ -66,11 +66,11 @@ class JsonConfigController{
     }
 
     setIP(ip){
-        jsonConfig.deviceIP = ip;
+        this.jsonConfig.deviceIP = ip;
     }
 
     getIP(){
-        return jsonConfig.deviceIP;
+        return this.jsonConfig.deviceIP;
     }
     
     setAntName(antNo,antName){
