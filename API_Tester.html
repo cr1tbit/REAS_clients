@@ -32,35 +32,33 @@
                     <label class="siimple-label">Insert your HTTP GET query:</label>
                 </div>
                 <div class="siimple-card-body">
-                    <form onsubmit="return httpGetFromReq()">
-                    <label class="siimple-label">http://</label>
-                    <input type="text" 
-                           class="siimple-input"
-                           size="10" 
-                           id="ipAddr" 
-                           value="192.168.2.200" 
-                           onchange="reqStrUpdate();setIP()"
-                    >
-                    <label class="siimple-label">/?</label>
-                    <input type="text" 
-                           class="siimple-input" 
-                           id="param" 
-                           value="mul=01010101" 
-                           onchange="reqStrUpdate()"
-                    >
-                    <input type="submit"
-                           style="height: 0px; 
-                                  width: 0px; 
-                                  border: none; 
-                                  padding: 0px;" 
-                           hidefocus="true" 
-                           />
+                    <form>
+                        <label class="siimple-label">http://</label>
+                        <input type="text" 
+                            class="siimple-input"
+                            size="10" 
+                            id="ipAddr" 
+                            value="192.168.2.200" 
+                            onchange="console.log('test');setIP(this.value)"
+                        >
+                        <label class="siimple-label">/?</label>
+                        <input type="text" 
+                            class="siimple-input" 
+                            id="param" 
+                            value="mul=01010101" 
+                        >
+                        <button type="button"
+                            style="height: 0px; 
+                                    width: 0px; 
+                                    border: none; 
+                                    padding: 0px;" 
+                            hidefocus="true" 
+                        >
                     </form>                    
                 </div>
                 <div class="siimple-card-footer">
                     <div class="siimple-btn siimple-btn--orange" 
-                         onload="reqStrUpdate()" 
-                         onclick="httpGetFromReq()">
+                         onclick="httpGetFromQueryBox()">
                          Send!
                     </div>
                 </div>
@@ -224,8 +222,8 @@ Nothing (yet!)
         var request = "http://"+
                 document.getElementById('ipAddr').value +
                 "/?mul=";
-        for (i in jsonConfig.antenna){
-            if(jsonConfig.antenna[i].state == "on"){
+        for (i in jsonConfigController.jsonConfig.antenna){
+            if(jsonConfigController.jsonConfig.antenna[i].state == "on"){
                 request+="1";
             }
             else{
@@ -247,15 +245,11 @@ Nothing (yet!)
 
     function reqStrUpdate() {
         req = guiController.getUrlFromQueryBox();
-        updateQueryDisp();
-        console.log("query: " + req);
+        guiController.updateQueryDisp(req); 
     }
     
-    function httpGetFromReq(){
-        reqStrUpdate();
-        //document.getElementById("queryDisp").innerHTML = req;
-        updateQueryDisp(req);
-        updateRespDisp("Waiting for response...");
+    function httpGetFromQueryBox(){
+        req = guiController.getUrlFromQueryBox();
         httpGet(req,handleServerResponse);
     }
 
@@ -293,6 +287,8 @@ Nothing (yet!)
 
     function httpGet(param,onLoadFunctionHandle = null)
     {
+        guiController.updateQueryDisp(param);
+        guiController.updateRespDisp("Waiting for response...");
         console.log("param: " + param);
         var xmlHttp = new XMLHttpRequest();
         xmlHttp.open( "GET", param, true );
@@ -323,6 +319,8 @@ Nothing (yet!)
 
 
     class GuiController{
+
+
 
         constructor(){
             console.log("guiController constructor called...")
@@ -361,6 +359,13 @@ Nothing (yet!)
                         .textInputParam.value;
         }
 
+        getQueryFromQueryBox(){
+            return "http://"
+                    + this.jsonGuiTree
+                        .queryBox
+                        .textInputIpAddr.value
+        }
+
         setSetupMode(mode){
             if (mode == true){
                 this.jsonGuiTree
@@ -381,6 +386,7 @@ Nothing (yet!)
                 .queryDisplayBox
                 .textAreaQueryDisp
                 .innerHTML = text
+            console.log("query:\n " + text);
         }
 
         updateRespDisp(text){
@@ -388,6 +394,7 @@ Nothing (yet!)
                 .responseBox
                 .textAreaRespDisp
                 .innerHTML = text
+                console.log("response:\n " + text);
         }
 
         drawDeviceStatus(statusText){
@@ -433,11 +440,11 @@ Nothing (yet!)
                     statusText = "On"
                 }
                 else if (jsonConfig.antenna[i].state == 'off'){
-                    statusColor = "error"
+                    statusColor = "primary"
                     statusText = "Off"
                 }
                 else{
-                    statusColor = "dark"
+                    statusColor = "error"
                     statusText="??"
                 }
                 

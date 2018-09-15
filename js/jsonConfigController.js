@@ -37,8 +37,8 @@ class JsonConfigController{
 
 
     saveSettingsOnLocalStorage(){
-        if(jsonConfig.localStorageEnabled == true){
-            localStorage.setItem('jsonConfigText',JSON.stringify(jsonConfig,null,2))
+        if(this.jsonConfig.localStorageEnabled == true){
+            localStorage.setItem('jsonConfigText',JSON.stringify(this.jsonConfig,null,2))
             console.log('saving data on local storage...');
         }
         else{
@@ -74,8 +74,8 @@ class JsonConfigController{
     }
     
     setAntName(antNo,antName){
-        if (jsonConfig.antenna[antNo] != null){
-            jsonConfig.antenna[antNo].name = antName
+        if (this.jsonConfig.antenna[antNo] != null){
+            this.jsonConfig.antenna[antNo].name = antName
         }
         else{
             console.log("antenna no. " + antNo + "doesn't exist!")
