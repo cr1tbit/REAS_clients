@@ -29,9 +29,25 @@ class GuiController{
                 antennaList : document.getElementById("antennaList"),
                 checkBoxSignleAntMode : document.getElementById("singleAntModeBox"),
                 buttonToggleSetupMode : document.getElementById("toggleSetupModeBut")
-            }
+            },
+            consentBox : document.getElementById('localStorageConsentWindow')
         }
     }
+
+    killConsentBox(){
+        this.jsonGuiTree
+            .consentBox
+            .style.display = "none";
+    }
+
+
+    //FIX THIS ASAP!!!!!!!
+    getAntName(antNo){
+        console.error("getAntName contains dirty hack and may throw "
+                    + "nasty errors (but may have worked fine).")
+        return document.getElementById("antListName"+antNo).value
+    }
+
     getQueryFromQueryBox(){
         return "http://"
                 + this.jsonGuiTree
@@ -68,7 +84,7 @@ class GuiController{
     updateIP(text){
         this.jsonGuiTree
             .queryBox
-            .textInputIpAddr = text
+            .textInputIpAddr.value = text
     }
 
     updateQueryDisp(text){

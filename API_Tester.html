@@ -170,12 +170,12 @@ Nothing (yet!)
 
     function enableLocalStorage(){
         jsonConfigController.enableLocalStorage();
-        document.getElementById('localStorageConsentWindow').style.display = "none";
+        guiController.killConsentBox();
     }
 
     function disableLocalStorage(){
         jsonConfigController.disableLocalStorage();
-        document.getElementById('localStorageConsentWindow').style.display = "none";
+        guiController.killConsentBox();
     } 
 
     function setIP(){
@@ -183,9 +183,8 @@ Nothing (yet!)
     }
 
     function setAntName(antNo){
-        jsonConfigController
-            .setAntName(antNo,
-                        document.getElementById("antListName"+antNo).value);
+        name = guiController.getAntName(antNo)
+        jsonConfigController.setAntName(antNo, name)
     }
 
     function toggleAntenna(antNo){
@@ -200,7 +199,7 @@ Nothing (yet!)
                 jsonConfigController.setAntennasOff();
                 break;
         }
-        drawAntennaList();
+        guiController.drawAntennaList(jsonConfigController.jsonConfig,setupMode);
         httpGet(getApiRequestFromJsonConfig(),handleServerResponse);
     }
 
