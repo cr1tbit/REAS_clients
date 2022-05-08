@@ -6,4 +6,4 @@ Please note, it's written in PURE JAVASCRIPT, there's no node_modules or anythin
 
 Also, I wrote it 4 years ago, before I had any commercial experience with programming, so If you're here to hire me, don't take any conclusions from the quality of code or anything.
 
-DEMO: vcc.earth <SLASH> REAS_demo
+DEMO: vcc.earth SLASH REAS_demo
